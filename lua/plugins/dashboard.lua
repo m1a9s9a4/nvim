@@ -4,7 +4,11 @@ return {
     event = "VimEnter",
     dependencies = { "nvim-tree/nvim-web-devicons" },
     opts = function()
-      local jst_time = os.time() + (9 * 60 * 60) -- 日本時間にする
+      -- UTC時刻を取得してJST(UTC+9)に変換
+      local utc_time = os.time(os.date("!*t"))
+      local jst_offset = 9 * 60 * 60 -- 9時間をセカンドに変換
+      local jst_time = utc_time + jst_offset
+
       local day_num = os.date("*t", jst_time).wday
       local day_names = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" }
       local day = day_names[day_num]
@@ -69,7 +73,7 @@ return {
       }
 
       local header = headers[day] or headers["Monday"]
-      local time = os.date("%H:%M")
+      local time = os.date("%H:%M", jst_time)
 
       local full_header = { "", "" }
       for _, line in ipairs(header) do
