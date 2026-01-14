@@ -3,15 +3,22 @@ return {
   branch = "v3.x",
   dependencies = {
     "nvim-lua/plenary.nvim",
-    "nvim-tree/nvim-web-devicons", -- not strictly required, but recommended
+    "nvim-tree/nvim-web-devicons",
     "MunifTanjim/nui.nvim",
-    -- "3rd/image.nvim", -- Optional image support in preview window: See `# Preview Mode` for more information
   },
   cmd = "Neotree",
   keys = {
-    { "<leader>e", "<cmd>Neotree toggle<cr>", desc = "NeoTree" },
+    { "<leader>e", "<cmd>Neotree toggle<cr>", desc = "NeoTree Files" },
+    { "<leader>ge", "<cmd>Neotree toggle git_status<cr>", desc = "NeoTree Git Status" },
   },
   opts = {
+    source_selector = {
+      winbar = true,
+      sources = {
+        { source = "filesystem", display_name = " Files" },
+        { source = "git_status", display_name = " Git" },
+      },
+    },
     filesystem = {
       follow_current_file = {
         enabled = true,

@@ -3,129 +3,96 @@ return {
     "nvimdev/dashboard-nvim",
     event = "VimEnter",
     dependencies = { "nvim-tree/nvim-web-devicons" },
-    opts = function()
-      -- UTC時刻を取得してJST(UTC+9)に変換
-      local utc_time = os.time(os.date("!*t"))
-      local jst_offset = 9 * 60 * 60 -- 9時間をセカンドに変換
-      local jst_time = utc_time + jst_offset
+    config = function()
+      -- kanagawa wave の青系カラーでハイライト設定
+      vim.api.nvim_set_hl(0, "DashboardHeader", { fg = "#7E9CD8" }) -- crystalBlue
+      vim.api.nvim_set_hl(0, "DashboardIcon", { fg = "#7FB4CA" }) -- springBlue
+      vim.api.nvim_set_hl(0, "DashboardKey", { fg = "#E6C384" }) -- carpYellow
+      vim.api.nvim_set_hl(0, "DashboardDesc", { fg = "#DCD7BA" }) -- fujiWhite
+      vim.api.nvim_set_hl(0, "DashboardFooter", { fg = "#54546D" }) -- sumiInk4
 
-      local day_num = os.date("*t", jst_time).wday
-      local day_names = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" }
-      local day = day_names[day_num]
-
-      local headers = {
-        Sunday = {
-          "  ███████╗██╗   ██╗███╗   ██╗██████╗  █████╗ ██╗   ██╗",
-          "  ██╔════╝██║   ██║████╗  ██║██╔══██╗██╔══██╗╚██╗ ██╔╝",
-          "  ███████╗██║   ██║██╔██╗ ██║██║  ██║███████║ ╚████╔╝ ",
-          "  ╚════██║██║   ██║██║╚██╗██║██║  ██║██╔══██║  ╚██╔╝  ",
-          "  ███████║╚██████╔╝██║ ╚████║██████╔╝██║  ██║   ██║   ",
-          "  ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝╚═════╝ ╚═╝  ╚═╝   ╚═╝   ",
-        },
-        Monday = {
-          "  ███╗   ███╗ ██████╗ ███╗   ██╗██████╗  █████╗ ██╗   ██╗",
-          "  ████╗ ████║██╔═══██╗████╗  ██║██╔══██╗██╔══██╗╚██╗ ██╔╝",
-          "  ██╔████╔██║██║   ██║██╔██╗ ██║██║  ██║███████║ ╚████╔╝ ",
-          "  ██║╚██╔╝██║██║   ██║██║╚██╗██║██║  ██║██╔══██║  ╚██╔╝  ",
-          "  ██║ ╚═╝ ██║╚██████╔╝██║ ╚████║██████╔╝██║  ██║   ██║   ",
-          "  ╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═════╝ ╚═╝  ╚═╝   ╚═╝   ",
-        },
-        Tuesday = {
-          "  ████████╗██╗   ██╗███████╗███████╗██████╗  █████╗ ██╗   ██╗",
-          "  ╚══██╔══╝██║   ██║██╔════╝██╔════╝██╔══██╗██╔══██╗╚██╗ ██╔╝",
-          "     ██║   ██║   ██║█████╗  ███████╗██║  ██║███████║ ╚████╔╝ ",
-          "     ██║   ██║   ██║██╔══╝  ╚════██║██║  ██║██╔══██║  ╚██╔╝  ",
-          "     ██║   ╚██████╔╝███████╗███████║██████╔╝██║  ██║   ██║   ",
-          "     ╚═╝    ╚═════╝ ╚══════╝╚══════╝╚═════╝ ╚═╝  ╚═╝   ╚═╝   ",
-        },
-        Wednesday = {
-          "  ██╗    ██╗███████╗██████╗ ███╗   ██╗███████╗███████╗██████╗  █████╗ ██╗   ██╗",
-          "  ██║    ██║██╔════╝██╔══██╗████╗  ██║██╔════╝██╔════╝██╔══██╗██╔══██╗╚██╗ ██╔╝",
-          "  ██║ █╗ ██║█████╗  ██║  ██║██╔██╗ ██║█████╗  ███████╗██║  ██║███████║ ╚████╔╝ ",
-          "  ██║███╗██║██╔══╝  ██║  ██║██║╚██╗██║██╔══╝  ╚════██║██║  ██║██╔══██║  ╚██╔╝  ",
-          "  ╚███╔███╔╝███████╗██████╔╝██║ ╚████║███████╗███████║██████╔╝██║  ██║   ██║   ",
-          "   ╚══╝╚══╝ ╚══════╝╚═════╝ ╚═╝  ╚═══╝╚══════╝╚══════╝╚═════╝ ╚═╝  ╚═╝   ╚═╝   ",
-        },
-        Thursday = {
-          "  ████████╗██╗  ██╗██╗   ██╗██████╗ ███████╗██████╗  █████╗ ██╗   ██╗",
-          "  ╚══██╔══╝██║  ██║██║   ██║██╔══██╗██╔════╝██╔══██╗██╔══██╗╚██╗ ██╔╝",
-          "     ██║   ███████║██║   ██║██████╔╝███████╗██║  ██║███████║ ╚████╔╝ ",
-          "     ██║   ██╔══██║██║   ██║██╔══██╗╚════██║██║  ██║██╔══██║  ╚██╔╝  ",
-          "     ██║   ██║  ██║╚██████╔╝██║  ██║███████║██████╔╝██║  ██║   ██║   ",
-          "     ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═════╝ ╚═╝  ╚═╝   ╚═╝   ",
-        },
-        Friday = {
-          "  ███████╗██████╗ ██╗██████╗  █████╗ ██╗   ██╗",
-          "  ██╔════╝██╔══██╗██║██╔══██╗██╔══██╗╚██╗ ██╔╝",
-          "  █████╗  ██████╔╝██║██║  ██║███████║ ╚████╔╝ ",
-          "  ██╔══╝  ██╔══██╗██║██║  ██║██╔══██║  ╚██╔╝  ",
-          "  ██║     ██║  ██║██║██████╔╝██║  ██║   ██║   ",
-          "  ╚═╝     ╚═╝  ╚═╝╚═╝╚═════╝ ╚═╝  ╚═╝   ╚═╝   ",
-        },
-        Saturday = {
-          "  ███████╗ █████╗ ████████╗██╗   ██╗██████╗ ██████╗  █████╗ ██╗   ██╗",
-          "  ██╔════╝██╔══██╗╚══██╔══╝██║   ██║██╔══██╗██╔══██╗██╔══██╗╚██╗ ██╔╝",
-          "  ███████╗███████║   ██║   ██║   ██║██████╔╝██║  ██║███████║ ╚████╔╝ ",
-          "  ╚════██║██╔══██║   ██║   ██║   ██║██╔══██╗██║  ██║██╔══██║  ╚██╔╝  ",
-          "  ███████║██║  ██║   ██║   ╚██████╔╝██║  ██║██████╔╝██║  ██║   ██║   ",
-          "  ╚══════╝╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝   ╚═╝   ",
-        },
+      local header = {
+        "",
+        "",
+        "",
+        "",
+        "         ███╗   ██╗ ██╗   ██╗ ██╗ ███╗   ███╗",
+        "         ████╗  ██║ ██║   ██║ ██║ ████╗ ████║",
+        "         ██╔██╗ ██║ ██║   ██║ ██║ ██╔████╔██║",
+        "         ██║╚██╗██║ ╚██╗ ██╔╝ ██║ ██║╚██╔╝██║",
+        "         ██║ ╚████║  ╚████╔╝  ██║ ██║ ╚═╝ ██║",
+        "         ╚═╝  ╚═══╝   ╚═══╝   ╚═╝ ╚═╝     ╚═╝",
+        "",
+        "",
+        "",
       }
 
-      local header = headers[day] or headers["Monday"]
-      local time = os.date("%H:%M", jst_time)
-
-      local full_header = { "", "" }
-      for _, line in ipairs(header) do
-        table.insert(full_header, line)
-      end
-      table.insert(full_header, "")
-      table.insert(full_header, "")
-
-      return {
+      require("dashboard").setup({
         theme = "doom",
         config = {
-          header = full_header,
+          header = header,
           center = {
             {
               icon = "  ",
+              icon_hl = "DashboardIcon",
               desc = "Find File",
+              desc_hl = "DashboardDesc",
               key = "f",
+              key_hl = "DashboardKey",
               action = function()
                 Snacks.picker.files()
               end,
             },
             {
               icon = "  ",
-              desc = "Recent Files",
+              icon_hl = "DashboardIcon",
+              desc = "Recent",
+              desc_hl = "DashboardDesc",
               key = "r",
+              key_hl = "DashboardKey",
               action = function()
                 Snacks.picker.recent()
               end,
             },
             {
               icon = "  ",
-              desc = "Find Text",
+              icon_hl = "DashboardIcon",
+              desc = "Grep",
+              desc_hl = "DashboardDesc",
               key = "g",
+              key_hl = "DashboardKey",
               action = function()
                 Snacks.picker.grep()
               end,
             },
             {
               icon = "  ",
-              desc = "Cheatsheet",
-              key = "?",
-              action = function()
-                require("config.cheatsheet").open()
-              end,
+              icon_hl = "DashboardIcon",
+              desc = "Config",
+              desc_hl = "DashboardDesc",
+              key = "c",
+              key_hl = "DashboardKey",
+              action = "e ~/.config/nvim/",
             },
-            { icon = "  ", desc = "Config", key = "c", action = "e ~/.config/nvim/" },
-            { icon = "  ", desc = "Lazy", key = "l", action = "Lazy" },
-            { icon = "  ", desc = "Quit", key = "q", action = "qa" },
+            {
+              icon = "  ",
+              icon_hl = "DashboardIcon",
+              desc = "Quit",
+              desc_hl = "DashboardDesc",
+              key = "q",
+              key_hl = "DashboardKey",
+              action = "qa",
+            },
           },
-          footer = { "", "Happy Coding!" },
+          footer = function()
+            local stats = require("lazy").stats()
+            return {
+              "",
+              stats.loaded .. "/" .. stats.count .. " plugins loaded",
+            }
+          end,
         },
-      }
+      })
     end,
   },
 }
