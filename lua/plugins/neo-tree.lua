@@ -25,5 +25,14 @@ return {
       },
       use_libuv_file_watcher = true,
     },
+    event_handlers = {
+      {
+        event = "neo_tree_buffer_enter",
+        handler = function()
+          vim.opt_local.statusline =
+            "%#Special# ⏎%#Comment# Open  %#Special#q%#Comment# Close  %#Special#P%#Comment# Preview  %#Special#a%#Comment# Add  %#Special#d%#Comment# Del  %#Special#r%#Comment# Rename  %#Special#⌃o%#Comment# Back"
+        end,
+      },
+    },
   },
 }

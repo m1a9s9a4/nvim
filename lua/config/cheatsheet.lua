@@ -79,16 +79,66 @@ M.sections = {
 }
 
 function M.open()
-  local items = {}
-  for _, section in ipairs(M.sections) do
+  local lines = {}
+  local highlights = {} -- { line, col_start, col_end, hl_group }
+
+  for i, section in ipairs(M.sections) do
+    if i > 1 then
+      table.insert(lines, "")
+    end
+    -- セクション名
+    local header = "── " .. section.name .. " ──"
+    table.insert(lines, header)
+    table.insert(highlights, { #lines, 0, #header, "Title" })
+
     for _, item in ipairs(section.items) do
-      table.insert(items, string.format("[%s] %-15s %s", section.name, item.key, item.desc))
+      local key_col = "  " .. item.key
+      local pad = string.rep(" ", math.max(1, 18 - #item.key))
+      local line = key_col .. pad .. item.desc
+      table.insert(lines, line)
+      table.insert(highlights, { #lines, 2, 2 + #item.key, "Special" })
     end
   end
 
-  Snacks.picker.select(items, {
-    prompt = "Cheatsheet",
-  }, function(_) end)
+  -- ウィンドウサイズ計算
+  local max_width = 0
+  for _, l in ipairs(lines) do
+    max_width = math.max(max_width, vim.fn.strdisplaywidth(l))
+  end
+  local width = math.min(max_width + 4, math.floor(vim.o.columns * 0.8))
+  local height = math.min(#lines, math.floor(vim.o.lines * 0.8))
+
+  local buf = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+  vim.bo[buf].modifiable = false
+  vim.bo[buf].bufhidden = "wipe"
+
+  local win = vim.api.nvim_open_win(buf, true, {
+    relative = "editor",
+    width = width,
+    height = height,
+    col = math.floor((vim.o.columns - width) / 2),
+    row = math.floor((vim.o.lines - height) / 2),
+    style = "minimal",
+    border = "rounded",
+    title = " Cheatsheet ",
+    title_pos = "center",
+  })
+
+  -- ハイライト適用
+  for _, hl in ipairs(highlights) do
+    vim.api.nvim_buf_add_highlight(buf, -1, hl[4], hl[1] - 1, hl[2], hl[3])
+  end
+
+  -- q / ESC / <leader>? で閉じる
+  local close = function()
+    if vim.api.nvim_win_is_valid(win) then
+      vim.api.nvim_win_close(win, true)
+    end
+  end
+  vim.keymap.set("n", "q", close, { buffer = buf, nowait = true })
+  vim.keymap.set("n", "<Esc>", close, { buffer = buf, nowait = true })
+  vim.keymap.set("n", "<leader>?", close, { buffer = buf, nowait = true })
 end
 
 return M

@@ -10,6 +10,7 @@ return {
       ensure_installed = {
         "gopls",
         "ts_ls",
+        "lua_ls",
       },
     },
   },
@@ -44,7 +45,22 @@ return {
         root_markers = { "package.json", "tsconfig.json", ".git" },
       }
 
-      vim.lsp.enable({ "gopls", "ts_ls" })
+      vim.lsp.config.lua_ls = {
+        cmd = { "lua-language-server" },
+        filetypes = { "lua" },
+        root_markers = { ".luarc.json", ".luarc.jsonc", ".git" },
+        settings = {
+          Lua = {
+            runtime = { version = "LuaJIT" },
+            workspace = {
+              checkThirdParty = false,
+              library = { vim.env.VIMRUNTIME },
+            },
+          },
+        },
+      }
+
+      vim.lsp.enable({ "gopls", "ts_ls", "lua_ls" })
     end,
   },
 }
