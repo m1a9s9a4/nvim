@@ -12,6 +12,7 @@ return {
         { "<leader>c", group = "Code" },
         { "<leader>x", group = "Diagnostics" },
         { "<leader>s", group = "Search/Replace" },
+        { "<leader>r", group = "Review" },
       },
     },
   },

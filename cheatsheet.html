@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neovim / WezTerm Cheatsheet</title>
+<style>
+  :root {
+    --bg: #1F1F28;
+    --bg2: #16161D;
+    --card: #2A2A37;
+    --line: #363646;
+    --fg: #DCD7BA;
+    --dim: #9a9890;
+    --key: #FF9E3B;
+    --key-bg: #2d2a1f;
+    --accent: #7E9CD8;
+    --green: #98BB6C;
+    --violet: #957FB8;
+    --red: #E46876;
+    --mark: #6A9589;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--fg); }
+  body {
+    font-family: "JetBrains Mono", "Noto Sans JP", ui-monospace, Menlo, monospace;
+    font-size: 13px;
+    line-height: 1.45;
+    padding: 0 16px 48px;
+  }
+  header {
+    position: sticky; top: 0; z-index: 10;
+    background: linear-gradient(var(--bg) 85%, rgba(31,31,40,0));
+    padding: 14px 0 12px;
+    display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center;
+  }
+  header h1 { font-size: 16px; margin: 0; letter-spacing: .04em; }
+  header h1 span { color: var(--dim); font-weight: normal; }
+  #q {
+    flex: 1 1 260px; max-width: 520px;
+    background: var(--bg2); color: var(--fg);
+    border: 1px solid var(--line); border-radius: 6px;
+    padding: 8px 12px; font: inherit; outline: none;
+  }
+  #q:focus { border-color: var(--accent); }
+  .tabs { display: flex; gap: 6px; }
+  .tab {
+    border: 1px solid var(--line); border-radius: 6px; padding: 6px 12px;
+    cursor: pointer; color: var(--dim); background: var(--bg2); user-select: none;
+  }
+  .tab.on { color: var(--bg2); background: var(--key); border-color: var(--key); font-weight: 600; }
+  .legend { color: var(--dim); font-size: 12px; }
+  .legend b { color: var(--key); font-weight: 600; }
+  #count { color: var(--dim); font-size: 12px; }
+
+  .part { margin-top: 10px; }
+  .part > h2 {
+    font-size: 13px; color: var(--accent); margin: 18px 0 8px;
+    text-transform: uppercase; letter-spacing: .12em;
+    border-bottom: 1px solid var(--line); padding-bottom: 4px;
+  }
+  .note {
+    color: var(--dim); font-size: 12px; margin: 0 0 10px;
+  }
+  .note b { color: var(--fg); font-weight: 600; }
+  .grid {
+    display: grid; gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    align-items: start;
+  }
+  .sec {
+    background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+    padding: 8px 10px 6px; break-inside: avoid;
+  }
+  .sec h3 {
+    margin: 0 0 6px; font-size: 12.5px; color: var(--green);
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .sec h3 small { color: var(--dim); font-weight: normal; font-size: 11px; }
+  .sec p.tip { color: var(--dim); font-size: 11.5px; margin: 0 0 6px; }
+  table { width: 100%; border-collapse: collapse; }
+  td { padding: 2.5px 4px; vertical-align: top; border-top: 1px solid rgba(255,255,255,.04); }
+  tr:first-child td { border-top: 0; }
+  td.k { width: 44%; white-space: nowrap; }
+  kbd {
+    display: inline-block; padding: 0 5px; margin: 1px 2px 1px 0;
+    border-radius: 4px; background: var(--key-bg); color: var(--key);
+    border: 1px solid #4a4030; font: inherit; font-size: 12px; line-height: 1.5;
+  }
+  kbd.mode { background: transparent; border-color: var(--line); color: var(--violet); font-size: 10.5px; }
+  td.d { color: var(--fg); }
+  td.d em { color: var(--dim); font-style: normal; }
+  mark { background: var(--mark); color: var(--bg2); border-radius: 2px; padding: 0 1px; }
+  .hidden { display: none !important; }
+  .empty { color: var(--dim); padding: 24px 0; }
+  @media print {
+    body { background: #fff; color: #111; font-size: 10.5px; }
+    header, .tabs, #q, .legend, #count { display: none; }
+    .sec { background: #fff; border-color: #ccc; }
+    kbd { background: #f3f0e6; color: #7a4a00; border-color: #d9d2bf; }
+    .sec h3 { color: #2d6a1f; } .part > h2 { color: #2b4a8a; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Cheatsheet <span>Neovim + WezTerm</span></h1>
+  <input id="q" type="search" placeholder="検索 (/ でフォーカス, Esc でクリア)  例: leader r, pane, test, 定義" autocomplete="off">
+  <div class="tabs">
+    <div class="tab on" data-part="all">すべて</div>
+    <div class="tab" data-part="nvim">Neovim</div>
+    <div class="tab" data-part="wez">WezTerm</div>
+  </div>
+  <div class="legend">Neovim <b>&lt;leader&gt;</b> = Space　/　WezTerm <b>LEADER</b> = Ctrl-q (2秒)　/　<b>⌘</b> = Cmd</div>
+  <div id="count"></div>
+</header>
+
+<div id="root"></div>
+<div id="empty" class="empty hidden">一致する項目はありません。</div>
+
+<script>
+// ---------------------------------------------------------------------------
+// data
+// key: shown as <kbd>. Separate alternatives with " / ". "{x}" = placeholder.
+// m: mode tag (n/v/i/t/x). d: description. Sections may carry a tip.
+// ---------------------------------------------------------------------------
+const NVIM = [
+  { name: "基本操作", items: [
+    ["i / a / A / I", "挿入: カーソル前 / 後 / 行末 / 行頭"],
+    ["o / O", "下 / 上に新しい行を作って挿入"],
+    ["Esc", "ノーマルモードに戻る"],
+    [":w / :q / :wq", "保存 / 終了 / 保存して終了"],
+    ["u / Ctrl-r", "元に戻す / やり直し (undo は永続化: 再起動後も有効)"],
+    [".", "直前の操作を繰り返す"],
+    ["<leader>w", "保存してジャンプ前の位置に戻る (:w + Ctrl-o)"],
+    ["<leader>?", "Neovim 内チートシート (右サイドバー) をトグル。:Cheat でも可"],
+  ]},
+  { name: "移動", items: [
+    ["h j k l", "左 下 上 右"],
+    ["w / b / e", "次の単語 / 前の単語 / 単語末尾"],
+    ["0 / ^ / $", "行頭 / 行頭(非空白) / 行末"],
+    ["gg / G", "ファイル先頭 / 末尾"],
+    ["Ctrl-o / Ctrl-i", "ジャンプ履歴を戻る / 進む"],
+    ["Ctrl-d / Ctrl-u", "半ページ下 / 上 (scrolloff=8)"],
+    ["%", "対応する括弧にジャンプ"],
+    ["* / #", "カーソル下の単語を前方 / 後方検索"],
+    ["/ / ?", "前方 / 後方検索 (ignorecase + smartcase: 小文字なら大小無視)"],
+    ["n / N", "次 / 前の検索結果"],
+    ["{count}j / k", "相対行番号で移動 (relativenumber 有効)"],
+  ]},
+  { name: "編集", items: [
+    ["yy / dd / cc", "行をコピー / 削除 / 変更"],
+    ["p / P", "後ろ / 前に貼り付け (クリップボード共有: unnamedplus)"],
+    ["ciw / diw", "単語を変更 / 削除"],
+    ["di( / ci\" / da{", "括弧・引用符の中身を削除 / 変更 / 外側ごと削除"],
+    [">> / <<", "インデント / デインデント (shiftwidth=2)"],
+    ["v / V / Ctrl-v", "ビジュアル / 行 / ブロック選択"],
+    ["J", "行を結合"],
+    ["(auto)", "保存時に自動フォーマット (conform: stylua / gofmt+goimports / prettier / black / rustfmt)"],
+    ["(auto)", "保存時・挿入抜けで lint (golangci-lint / eslint_d)"],
+    ["(auto)", "括弧・引用符の自動ペア (mini.pairs)"],
+  ]},
+  { name: "補完 (blink.cmp)", tip: "挿入モードで自動表示。ghost text あり、シグネチャヘルプ有効。", items: [
+    ["Ctrl-y", "候補を確定", "i"],
+    ["Ctrl-n / Ctrl-p", "次 / 前の候補 (↑↓ も可)", "i"],
+    ["Ctrl-Space", "補完メニューを開く / ドキュメントをトグル", "i"],
+    ["Ctrl-e", "補完を閉じる", "i"],
+    ["Ctrl-b / Ctrl-f", "ドキュメントをスクロール", "i"],
+    ["Tab / Shift-Tab", "スニペットの次 / 前のプレースホルダ", "i"],
+    ["Ctrl-k", "シグネチャヘルプをトグル", "i"],
+  ]},
+  { name: "Flash (ジャンプ)", tip: "s の後に 300ms 待つと Flash。すぐ a/d/r を押すと Surround になる。", items: [
+    ["s{文字}", "入力した文字の出現位置にラベル表示 → ラベルキーで飛ぶ", "n v o"],
+    ["S", "Treesitter ノードを選択 (関数・ブロック単位)", "n v o"],
+  ]},
+  { name: "Surround (mini.surround)", items: [
+    ["sa{motion}{char}", "囲みを追加 (例: saiw\" → 単語を \"\" で囲む)"],
+    ["sd{char}", "囲みを削除 (例: sd\" )"],
+    ["sr{old}{new}", "囲みを置換 (例: sr\"' )"],
+    ["sf / sF", "次 / 前の囲みを検索してカーソル移動"],
+    ["sh", "囲みをハイライト"],
+    ["sn", "検索する行数を変更"],
+  ]},
+  { name: "Text Objects (Treesitter)", items: [
+    ["af / if", "関数の外側 / 内側 (daf で関数削除, vif で本体選択)"],
+    ["ac / ic", "クラス・構造体の外側 / 内側"],
+    ["aa / ia", "引数の外側 / 内側 (cia で引数変更)"],
+    ["]f / [f", "次 / 前の関数にジャンプ"],
+    ["]C / [C", "次 / 前のクラス・構造体 (]c / [c は git hunk 用)"],
+    ["<leader>sn / <leader>sp", "引数を次 / 前と入れ替え"],
+  ]},
+  { name: "LSP", tip: "gopls / ts_ls / lua_ls を自分で設定。eslint / jsonls / yamlls / marksman は mason-lspconfig が自動有効化。", items: [
+    ["gd", "定義へジャンプ (定義上で押してもその場に留まる)"],
+    ["gr", "参照一覧"],
+    ["gi", "実装へジャンプ"],
+    ["gy", "型定義へジャンプ"],
+    ["K", "ホバードキュメント"],
+    ["<leader>rn", "リネーム"],
+    ["<leader>ca", "コードアクション"],
+    ["<leader>cf", "手動フォーマット (保存時は自動)"],
+    ["<leader>cx", "最上部に固定表示される「今いる関数/メソッド名」ヘッダーをトグル (treesitter-context)"],
+    ["[x", "囲んでいる関数の宣言行へジャンプ"],
+    [":LspInfo / :Mason", "接続中サーバー確認 / サーバー管理"],
+  ]},
+  { name: "Diagnostics (Trouble)", items: [
+    ["<leader>xx", "全診断をトグル"],
+    ["<leader>xX", "現バッファの診断"],
+    ["<leader>xq", "Quickfix リスト"],
+    ["<leader>xs", "シンボル一覧"],
+  ]},
+  { name: "Finder (Snacks Picker)", items: [
+    ["<leader>ff", "ファイル検索 (隠しファイル含む)"],
+    ["<leader>fg", "テキスト検索 (grep)"],
+    ["<leader>fb", "バッファ一覧"],
+    ["<leader>fr", "最近のファイル"],
+    ["<leader>fh", "ヘルプ検索"],
+    ["<leader>fc", "コマンド一覧"],
+    ["<leader>fs / <leader>fS", "LSP シンボル (現ファイル / ワークスペース)"],
+    ["<leader>ft", "TODO 一覧 (quickfix)"],
+    ["<leader>gf / <leader>gl", "Git ファイル検索 / Git ログ"],
+    ["<leader>:", "コマンド履歴"],
+    ["<leader>/", "開いているバッファ内を grep"],
+  ]},
+  { name: "Picker 内の操作", items: [
+    ["Enter", "開く"],
+    ["Ctrl-t / Ctrl-v / Ctrl-s", "タブ / 縦分割 / 横分割で開く"],
+    ["Ctrl-n / Ctrl-p (↓↑)", "候補を移動"],
+    ["Ctrl-q", "結果を quickfix に送る"],
+    ["Tab / Shift-Tab", "複数選択 / 解除"],
+    ["Ctrl-d / Ctrl-u", "プレビューをスクロール"],
+    ["Esc / Ctrl-c", "閉じる"],
+  ]},
+  { name: "Neo-tree (ファイルツリー)", items: [
+    ["<leader>e", "ファイルツリー トグル (現在ファイルを自動追従)"],
+    ["<leader>ge", "Git ステータスツリー トグル"],
+    ["Enter", "開く"],
+    ["P", "プレビュー"],
+    ["a / A", "新規ファイル / フォルダ作成"],
+    ["d / r", "削除 / リネーム"],
+    ["c / m / p", "コピー / 移動 / 貼り付け"],
+    ["y / x", "コピー / 切り取り (ツリー内)"],
+    ["H", "隠しファイル表示トグル"],
+    ["/ ", "ツリー内フィルタ"],
+    ["< / >", "Files ↔ Git ソース切替"],
+    ["q", "ツリーを閉じる"],
+    ["Ctrl-o", "開いた後にエディタへ戻る"],
+  ]},
+  { name: "Git", items: [
+    ["<leader>gg", "Lazygit をフロートで開く"],
+    ["<leader>gs / <leader>gu", "hunk をステージ / ステージ取消"],
+    ["<leader>gr", "hunk をリセット"],
+    ["<leader>gp", "hunk をプレビュー"],
+    ["<leader>gb", "行 blame"],
+    ["<leader>gd", "diff を左右で開く (左はインデックス版、読み取り専用)"],
+    ["]c / [c", "次 / 前の hunk (staged も含む。diff 表示中は標準の差分ジャンプ)"],
+  ]},
+  { name: "Test (Neotest / Go)", items: [
+    ["<leader>tt", "カーソル近くのテストを実行"],
+    ["<leader>tf", "ファイル全テスト"],
+    ["<leader>ta", "全テスト (cwd)"],
+    ["<leader>ts", "サマリーパネル"],
+    ["<leader>to", "テスト出力 (フロート)"],
+    ["<leader>tp", "出力パネル"],
+    ["<leader>tl", "前回のテストを再実行"],
+    ["<leader>tw", "ファイルのテストを監視"],
+  ]},
+  { name: "Debug (DAP / delve)", items: [
+    ["<leader>dc", "デバッグ開始 / 続行"],
+    ["<leader>db / <leader>dB", "ブレークポイント / 条件付きブレークポイント"],
+    ["<leader>dn", "ステップオーバー"],
+    ["<leader>di / <leader>do", "ステップイン / ステップアウト"],
+    ["<leader>dt", "デバッグ終了"],
+    ["<leader>du", "デバッグ UI トグル"],
+    ["<leader>de", "式を評価", "n v"],
+    ["<leader>dr", "REPL を開く"],
+  ]},
+  { name: "Review → Claude Code", tip: "コメントは worktree ごとに自動保存 (再起動後も復元)。送信・破棄分は履歴に残る。", items: [
+    ["<leader>rc", "行 / 選択範囲にレビューコメント", "n v"],
+    ["<leader>rd", "カーソル行のコメントを削除"],
+    ["<leader>rv", "行 / 選択範囲を reviewed ✓ にトグル", "n v"],
+    ["<leader>rV", "ファイル全体を reviewed ✓ にトグル"],
+    ["<leader>rl", "コメント / reviewed 一覧 (quickfix)"],
+    ["<leader>rs", "コメントを Claude ペインに貼り付け (Claude 側で Enter)。ペインが複数なら選択"],
+    ["<leader>rx", "コメントを全破棄 (履歴には残る)"],
+    ["<leader>rX", "レビュー完了: コメントと reviewed ✓ をまとめて消去 (履歴に保存)"],
+    ["<leader>rh", "送信履歴を見る"],
+    ["<leader>rR", "過去の送信分を再送 (送信先を選択)"],
+    ["<leader>rp", "送信先 Claude ペインを選び直す"],
+    [":ClaudeReviewedReset", "reviewed マークだけを全消去"],
+  ]},
+  { name: "Claude Code (claudecode.nvim)", items: [
+    ["<leader>ac", "Claude パネルをトグル"],
+    ["<leader>af", "Claude パネルにフォーカス"],
+    ["<leader>as", "選択範囲を Claude に送信", "v"],
+    ["<leader>ab", "現バッファを Claude のコンテキストに追加"],
+    ["<leader>ay", "ファイル:行番号をクリップボードにコピー"],
+    ["<leader>ap", "ファイル:行番号を同じタブの隣ペインに送信"],
+  ]},
+  { name: "TODO コメント", items: [
+    ["]t / [t", "次 / 前の TODO / FIXME / NOTE にジャンプ"],
+    ["<leader>ft", "TODO 一覧 (quickfix)"],
+  ]},
+  { name: "ウィンドウ / ペイン", tip: "Ctrl-hjkl は Neovim の分割と WezTerm のペインをまたいで移動する (smart-splits)。", items: [
+    ["Ctrl-h / j / k / l", "ウィンドウ・ペイン移動 (ターミナルモードからも可)", "n t"],
+    ["Alt-h / j / k / l", "ウィンドウ・ペインをリサイズ"],
+    [":vsplit / :split", "縦 / 横に分割 (新規は右・下に開く)"],
+    ["Ctrl-w q / Ctrl-w o", "ウィンドウを閉じる / 他を全部閉じる"],
+  ]},
+  { name: "Dashboard (起動画面)", items: [
+    ["f / r / g", "ファイル検索 / 最近のファイル / grep"],
+    ["c", "Neovim 設定を開く"],
+    ["q", "終了"],
+  ]},
+  { name: "which-key グループ", tip: "Space を押して少し待つと候補が出る。", items: [
+    ["<leader>f", "Find"], ["<leader>g", "Git"], ["<leader>d", "Debug"], ["<leader>t", "Test"],
+    ["<leader>a", "AI"], ["<leader>c", "Code"], ["<leader>x", "Diagnostics"],
+    ["<leader>s", "Search/Replace"], ["<leader>r", "Review"],
+  ]},
+];
+
+const WEZ = [
+  { name: "全般", tip: "LEADER = Ctrl-q (2秒以内に次のキー)。デフォルトキーバインドは無効化済み。", items: [
+    ["Ctrl-q ?", "全コマンドをファジー検索 (キーバインド付き一覧)"],
+    ["⌘ p / Ctrl-Shift-p", "コマンドパレット"],
+    ["Ctrl-Shift-r", "設定を再読み込み (保存時も自動リロード)"],
+    ["Ctrl-q n", "下部ステータスバーのナビヒントを表示 / 非表示"],
+    ["Alt-Enter", "フルスクリーン切替"],
+    ["Shift-Enter", "改行を入力 (Claude Code 等で複数行入力)"],
+  ]},
+  { name: "Workspace", items: [
+    ["Ctrl-q w", "Workspace 一覧から切替"],
+    ["Ctrl-q Shift-w", "Workspace を新規作成 (名前入力)"],
+    ["Ctrl-q $", "現在の Workspace をリネーム"],
+  ]},
+  { name: "Tab", items: [
+    ["⌘ t", "新しいタブ"],
+    ["⌘ w", "タブを閉じる (確認あり)"],
+    ["Ctrl-Tab / Ctrl-Shift-Tab", "次 / 前のタブ"],
+    ["⌘ 1 〜 8", "タブ番号で切替"],
+    ["⌘ 9", "最後のタブ"],
+    ["Ctrl-q { / }", "タブを左 / 右に移動"],
+  ]},
+  { name: "Pane (分割)", items: [
+    ["⌘ d / Ctrl-q r", "左右に分割"],
+    ["⌘ Shift-d / Ctrl-q d", "上下に分割"],
+    ["⌘ Shift-w / Ctrl-q x", "ペインを閉じる (確認あり)"],
+    ["Ctrl-h / j / k / l", "ペイン移動 (Neovim 内なら Neovim の分割を移動。ペインが 1 つなら通常のキーとしてシェルへ)"],
+    ["Alt-h / j / k / l", "ペインを 3 セルずつリサイズ (Neovim 内なら Neovim のウィンドウ)"],
+    ["⌘ h / j / k / l", "ペイン移動 (常に WezTerm 側)"],
+    ["Ctrl-q h / j / k / l", "ペイン移動 (LEADER 経由)"],
+    ["Ctrl-q a → h/j/k/l", "ペイン移動モード (1秒)"],
+    ["Ctrl-q s → h/j/k/l", "リサイズモード (Enter / Esc で終了。ステータスバーに表示)"],
+    ["Ctrl-q z", "ペインをズーム (1 つだけ表示) / 解除"],
+    ["Ctrl-Shift-[", "ペインをラベルで選択"],
+  ]},
+  { name: "コピー / 貼り付け", items: [
+    ["⌘ c / ⌘ v", "コピー / 貼り付け"],
+    ["Ctrl-q [", "コピーモード (vim 風)"],
+    ["Ctrl-+ / Ctrl-- / Ctrl-0", "フォントサイズ 拡大 / 縮小 / リセット"],
+  ]},
+  { name: "コピーモード内 (Ctrl-q [)", items: [
+    ["h j k l / w b e", "移動 / 単語移動"],
+    ["0 / ^ / $", "行頭 / 行頭(非空白) / 行末"],
+    ["f{c} / F{c} / t{c} / T{c} / ;", "文字へジャンプ / 繰り返し"],
+    ["g / G", "スクロールバックの先頭 / 末尾"],
+    ["H / M / L", "画面の上 / 中 / 下"],
+    ["Ctrl-u / Ctrl-d / Ctrl-b / Ctrl-f", "半ページ / 1 ページ スクロール"],
+    ["v / V / Ctrl-v", "文字 / 行 / 矩形 選択"],
+    ["o / O", "選択の反対端へ"],
+    ["y", "クリップボードにコピー (モード継続)"],
+    ["Enter", "コピーして終了"],
+    ["Esc / q / Ctrl-c", "終了"],
+  ]},
+  { name: "ステータスバー (下部)", items: [
+    ["左", "Workspace 名 + ナビヒント (Ctrl-q n で非表示)"],
+    ["右", "アクティブな key table (赤) / CPU 負荷 / メモリ / バッテリー / 日時"],
+    ["タブ", "アクティブは黄色。閉じるボタン・追加ボタンなし"],
+  ]},
+  { name: "見た目・挙動", items: [
+    ["フォント", "JetBrains Mono Medium 11pt (日本語は Noto Sans JP)"],
+    ["配色", "Kanagawa (Gogh)。Neovim も Kanagawa wave + 透過"],
+    ["透過", "フォーカス時 95% / 非フォーカス時 80%、ブラー 20"],
+    ["非アクティブペイン", "暗く・彩度を下げて表示"],
+    ["IME", "有効。未確定文字は WezTerm 側で描画。Ctrl/Alt は IME に渡さない"],
+    ["送信先", "Neovim の <leader>rs / <leader>ap は Herdr 内の Claude ペイン (同じタブ優先) → WezTerm ペインの順で候補を出し、複数あれば選択"],
+  ]},
+];
+
+// ---------------------------------------------------------------------------
+// render
+// ---------------------------------------------------------------------------
+const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function keyHtml(k) {
+  // split alternatives on " / " but keep "/ " and "? " literal keys intact
+  const parts = k.split(/ \/ (?=\S)/);
+  return parts.map(p => `<kbd>${esc(p)}</kbd>`).join('<span style="color:var(--dim)"> / </span>');
+}
+
+function render(list, partId, title, note) {
+  const secs = list.map(sec => {
+    const rows = sec.items.map(([k, d, m]) => {
+      const mode = m ? ` <kbd class="mode">${esc(m)}</kbd>` : "";
+      return `<tr data-text="${esc((sec.name + " " + k + " " + d + " " + (m || "")).toLowerCase())}">
+        <td class="k">${keyHtml(k)}${mode}</td><td class="d">${esc(d)}</td></tr>`;
+    }).join("");
+    const tip = sec.tip ? `<p class="tip">${esc(sec.tip)}</p>` : "";
+    return `<section class="sec" data-name="${esc(sec.name.toLowerCase())}">
+      <h3>${esc(sec.name)}<small>${sec.items.length}</small></h3>${tip}<table>${rows}</table></section>`;
+  }).join("");
+  return `<div class="part" data-part="${partId}"><h2>${title}</h2><p class="note">${note}</p><div class="grid">${secs}</div></div>`;
+}
+
+document.getElementById("root").innerHTML =
+  render(NVIM, "nvim", "Neovim",
+    "<b>&lt;leader&gt;</b> = Space。設定: ~/.config/nvim (lazy.nvim)。タグ n/v/i/t はモード (未記載はノーマル)。") +
+  render(WEZ, "wez", "WezTerm",
+    "<b>LEADER</b> = Ctrl-q (2 秒)。設定: ~/.config/wezterm/wezterm.lua + keybinds.lua。<b>⌘</b> = Cmd (SUPER)。");
+
+// ---------------------------------------------------------------------------
+// search + tabs
+// ---------------------------------------------------------------------------
+const q = document.getElementById("q");
+const count = document.getElementById("count");
+let part = "all";
+
+function norm(s) {
+  return s.toLowerCase()
+    .replace(/<leader>|leader\s*/g, "<leader>")   // "leader r" → "<leader>r"
+    .replace(/\s+/g, " ").trim();
+}
+
+function highlight(cell, terms) {
+  const txt = cell.textContent;
+  let html = esc(txt);
+  for (const t of terms) {
+    if (!t) continue;
+    const re = new RegExp(t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+    html = html.replace(re, m => `\u0000${m}\u0001`);
+  }
+  cell.innerHTML = html.replace(/\u0000/g, "<mark>").replace(/\u0001/g, "</mark>");
+}
+
+function apply() {
+  const raw = norm(q.value);
+  const terms = raw.split(" ").filter(Boolean);
+  let shown = 0;
+  document.querySelectorAll(".part").forEach(p => {
+    const partOn = part === "all" || p.dataset.part === part;
+    p.classList.toggle("hidden", !partOn);
+    if (!partOn) return;
+    p.querySelectorAll(".sec").forEach(sec => {
+      let any = 0;
+      sec.querySelectorAll("tr").forEach(tr => {
+        const text = tr.dataset.text.replace(/leader\s*/g, "<leader>");
+        const hit = terms.every(t => text.includes(t));
+        tr.classList.toggle("hidden", !hit);
+        const d = tr.querySelector("td.d");
+        if (hit) { any++; highlight(d, terms.length && q.value.trim() ? terms : []); }
+      });
+      sec.classList.toggle("hidden", any === 0);
+      shown += any;
+    });
+  });
+  document.getElementById("empty").classList.toggle("hidden", shown > 0);
+  count.textContent = `${shown} 項目`;
+}
+
+q.addEventListener("input", apply);
+document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => {
+  document.querySelectorAll(".tab").forEach(x => x.classList.remove("on"));
+  t.classList.add("on"); part = t.dataset.part; apply();
+}));
+document.addEventListener("keydown", e => {
+  if (e.key === "/" && document.activeElement !== q) { e.preventDefault(); q.focus(); q.select(); }
+  if (e.key === "Escape") { q.value = ""; apply(); q.blur(); }
+});
+apply();
+</script>
+</body>
+</html>

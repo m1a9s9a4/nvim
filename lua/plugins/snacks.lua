@@ -1,3 +1,30 @@
+-- LSP picker wrapper: include the cursor location (so `gd` on a definition does not
+-- report "No results"), and explain when no LSP client is attached to the buffer.
+local function lsp_pick(source, method)
+  return function()
+    local buf = vim.api.nvim_get_current_buf()
+    local attached = vim.lsp.get_clients({ bufnr = buf })
+    local capable = vim.tbl_filter(function(c)
+      return c:supports_method(method, buf)
+    end, attached)
+    if #capable == 0 then
+      local names = vim.tbl_map(function(c)
+        return c.name
+      end, attached)
+      vim.notify(
+        ("No LSP client supports %s here (ft=%s, attached: %s)"):format(
+          method,
+          vim.bo[buf].filetype,
+          #names > 0 and table.concat(names, ", ") or "none"
+        ),
+        vim.log.levels.WARN
+      )
+      return
+    end
+    Snacks.picker[source]({ include_current = true })
+  end
+end
+
 return {
   {
     "folke/snacks.nvim",
@@ -8,7 +35,7 @@ return {
       {
         "<leader>ff",
         function()
-          Snacks.picker.files()
+          Snacks.picker.files({ hidden = true })
         end,
         desc = "Find Files",
       },
@@ -86,30 +113,22 @@ return {
       -- LSP
       {
         "gd",
-        function()
-          Snacks.picker.lsp_definitions()
-        end,
+        lsp_pick("lsp_definitions", "textDocument/definition"),
         desc = "Go to Definition",
       },
       {
         "gr",
-        function()
-          Snacks.picker.lsp_references()
-        end,
+        lsp_pick("lsp_references", "textDocument/references"),
         desc = "References",
       },
       {
         "gi",
-        function()
-          Snacks.picker.lsp_implementations()
-        end,
+        lsp_pick("lsp_implementations", "textDocument/implementation"),
         desc = "Implementations",
       },
       {
         "gy",
-        function()
-          Snacks.picker.lsp_type_definitions()
-        end,
+        lsp_pick("lsp_type_definitions", "textDocument/typeDefinition"),
         desc = "Type Definitions",
       },
       -- その他
